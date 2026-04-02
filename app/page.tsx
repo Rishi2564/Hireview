@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import InputPanel, { type AnalysisResult } from "@/components/InputPanel";
 import ResultsPanel from "@/components/ResultsPanel";
 
@@ -8,6 +9,34 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [targetRole, setTargetRole] = useState("");
+  const [meLoading, setMeLoading] = useState(true);
+  const [me, setMe] = useState<{ id: string; email: string } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        const data = await res.json();
+        if (!cancelled) setMe(data?.user ?? null);
+      } catch {
+        if (!cancelled) setMe(null);
+      } finally {
+        if (!cancelled) setMeLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      setMe(null);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -15,17 +44,33 @@ export default function Home() {
       {/* ── Header ── */}
       <header className="sticky top-0 z-50 border-b border-surface-border bg-surface/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          <div className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-sm shadow-brand-sm">
               H
             </span>
             <span className="font-display font-semibold text-white text-lg tracking-tight">
               Hire<span className="text-gradient">View</span>
             </span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline px-3 py-1 rounded-full text-xs font-semibold bg-brand-900/60 border border-brand-700/40 text-brand-300">
+              AI-Powered · Free
+            </span>
+            {meLoading ? null : me ? (
+              <>
+                <span className="hidden md:inline text-xs text-gray-400 max-w-[220px] truncate">
+                  {me.email}
+                </span>
+                <button className="btn-secondary text-xs" onClick={logout} type="button">
+                  Log out
+                </button>
+              </>
+            ) : (
+              <Link href="/login" className="btn-secondary text-xs">
+                Log in
+              </Link>
+            )}
           </div>
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-900/60 border border-brand-700/40 text-brand-300">
-            AI-Powered · Free
-          </span>
         </div>
       </header>
 

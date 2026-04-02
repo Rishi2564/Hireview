@@ -37,6 +37,18 @@ export default function InputPanel({ onResult, onLoading, onTargetRoleChange, lo
   const [apiError, setApiError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const extractTextFile = async (file: File) => {
+    try {
+      setPdfStatus("Reading text file…");
+      const text = await file.text();
+      setResume(text.trim());
+      setPdfStatus("✓ Loaded text file");
+    } catch (err) {
+      console.error(err);
+      setPdfStatus("⚠ Could not read text file — paste text manually.");
+    }
+  };
+
   const extractPdfText = async (file: File) => {
     try {
       setPdfStatus("Extracting PDF…");
@@ -67,19 +79,7 @@ export default function InputPanel({ onResult, onLoading, onTargetRoleChange, lo
     }
   };
 
-  const extractTextFile = async (file: File) => {
-    try {
-      setPdfStatus("Reading text file…");
-      const text = await file.text();
-      setResume(text.trim());
-      setPdfStatus("✓ Loaded text file");
-    } catch (err) {
-      console.error(err);
-      setPdfStatus("⚠ Could not read text file — paste text manually.");
-    }
-  };
-
-  const handleFileChange = (file: File | null) => {
+  const handleFileChange = useCallback((file: File | null) => {
     if (!file) return;
     setApiError("");
     setResumeError("");
@@ -95,14 +95,14 @@ export default function InputPanel({ onResult, onLoading, onTargetRoleChange, lo
     setPdfStatus(
       `⚠ Unsupported file type (${file.type || "unknown"}). Please upload a PDF or TXT.`
     );
-  };
+  }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     handleFileChange(file);
-  }, []);
+  }, [handleFileChange]);
 
   const validate = () => {
     let valid = true;

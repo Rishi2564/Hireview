@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import BotpressChatButton from "@/components/BotpressChatButton";
 
 export const metadata: Metadata = {
   title: "HireView — AI Career Coach",
@@ -26,7 +27,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <BotpressChatButton />
+      </body>
     </html>
   );
 }
